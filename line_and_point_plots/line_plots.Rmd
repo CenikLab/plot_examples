@@ -1,0 +1,211 @@
+---
+title: " Line Plots"
+output: 
+   html_document:
+     keep_md: true
+---
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  fig.path = "line_plots/plot-"
+)
+```
+
+## About the Data
+
+Our data typically exists in data frames. Imagine that we have fluorescence data coming from 10 experiments (5 control + 5 treatment) that are biological replicates measured at 3 time points. 
+We are interested in the average and the standard error of this data in the control and treatment groups.
+
+```{r libraries, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+```
+
+```{r data_creation, echo=FALSE}
+set.seed(512)
+stage_1  = 3 + rnorm(n=5, sd = 0.5)
+stage_2  = 7 + rnorm(n=5, sd = 0.6)
+stage_3  = 5 + rnorm(n=5, sd = 0.3)
+experiment  = c("Control_1",
+                "Control_2",
+                "Control_3",
+                "Control_4",
+                "Control_5") 
+
+sample_df_short = data.frame( experiment, stage_1, stage_2, stage_3 )
+
+stage_1  = 3   + rnorm(n=5, sd = 0.4)
+stage_2  = 7.4 + rnorm(n=5, sd = 0.8)
+stage_3  = 6 + rnorm(n=5, sd = 0.3)
+experiment  = c("Treatment_1",
+                "Treatment_2",
+                "Treatment_3",
+                "Treatment_4",
+                "Treatment_5") 
+
+tmp_df = data.frame( experiment, stage_1, stage_2, stage_3 )
+
+sample_df_short = rbind(sample_df_short, tmp_df)
+```
+
+```{r raw_data_see}
+sample_df_short
+```
+
+### Data Preparation
+
+We need to put our data frame to longer format and then compute the average and the standard error.
+
+```{r arrange_data}
+sample_df = melt(sample_df_short, id = c("experiment"))
+
+colnames(sample_df) = c( "experiment", "stage", "fluorescence" )
+```
+
+```{r display_long_df}
+   sample_df[1:6,]
+```
+
+Next we label experiments as "Control" and "Treatment". Pay attention to the 
+"unlist" function. Lists will cause issues with ggplot. Converting these labels to vector is necessary.
+
+```{r add_label}
+sample_df = sample_df %>% 
+  mutate( exp_group = unlist(lapply( strsplit(experiment, split = "_"), "[[", 1 ) )  )
+```
+
+```{r add_mean_se}
+compute_se <- function(x) sqrt(var(x)/length(x))
+# Now we can add average and standard error (se) to the table
+
+sample_df = sample_df %>%
+  group_by(exp_group, stage) %>%
+  mutate(average = mean(fluorescence)) %>%
+  mutate(se = compute_se(fluorescence) )
+
+sample_df[1:6,]
+```
+
+## Plotting with the Defaults
+
+First, we attempt to plot the data with the minmal code.
+
+```{r plot_with_defaults, echo=TRUE}
+ggplot(data = sample_df,
+       aes( x = stage, y = average, group = exp_group ) ) + 
+  geom_line( aes(linetype = exp_group, color = exp_group) ) + 
+  geom_errorbar( aes(ymin=average-se, ymax= average + se, color = exp_group) )
+```
+
+This plot is clearly NOT publication ready.
+
+In the remaining of this document, we make this plot publication ready and save it.
+
+### Have Your Parameters in One Place
+
+For projects involving many figures, it is a good idea to 
+have the parameters of the plot (colors, font size etc.) in one place.
+This way, making changes in the project / manuscript are easier and consistent.
+
+
+```{r garph_parameters}
+
+TREATMENT_COLOR = "#bf5700"
+CONTROL_COLOR   = "#005f86"
+
+FONT_LABEL_SIZE = 8
+FONT_TITLE_SIZE = 10
+FIGURE_FONT     = "helvetica"
+
+AXIS_THICKNESS  = 0.35
+
+PDF_RESOLUTION = 600
+```
+
+### Error Bars
+
+First, we fix the error bars. 
+They overlap, so we use `position_dodge` to put them apart.
+Also we can fix their size.
+
+```{r plot_error_bars, echo=TRUE}
+line_plot = 
+  ggplot(data = sample_df,
+       aes( x = stage, y = average, group = exp_group ) ) + 
+  geom_line( aes(linetype = exp_group, color = exp_group) ) + 
+  geom_errorbar( aes(ymin=average-se, ymax= average + se, color = exp_group),
+                 position = position_dodge(width = 0.15), width = 0.4, size = 0.4 )
+
+print(line_plot)
+```
+
+### Labels and Colors
+
+```{r legends_and_colors,warning=FALSE, message=FALSE}
+line_plot = line_plot +
+   scale_linetype_manual(values=c("solid", "dashed")) + 
+   scale_colour_manual(values = c(CONTROL_COLOR, TREATMENT_COLOR)   ) + 
+   labs(title = "Protein Abundance", y = "Fluorescence", x = "Stage") + 
+   scale_x_discrete( labels = c("stage 1", "stage 2", "stage 3"),  expand = c(0.1, 0.1)) +
+   ylim(c(3,8)) +
+   scale_y_continuous( breaks = 3:8, labels = 3:8, expand = c(0.1,0)) 
+
+   
+   
+print(line_plot)
+```
+
+
+### Legend, Theme & Axis
+
+```{r theme_and_legend,warning=FALSE, message=FALSE}
+line_plot = line_plot +
+      theme(
+      panel.border      = element_blank(),
+      panel.grid        = element_blank(),
+      plot.title        = element_text(hjust = 0.5, family = FIGURE_FONT, face = "plain", size = FONT_TITLE_SIZE),
+      panel.background  = element_blank(),
+      axis.text.y       = element_text(family = FIGURE_FONT, face = "plain", size = FONT_LABEL_SIZE),
+      axis.text.x       = element_text(family = FIGURE_FONT, face = "plain", size = FONT_LABEL_SIZE),
+      axis.title.y      = element_text(family = FIGURE_FONT, face = "plain", size = FONT_LABEL_SIZE),
+      axis.title.x      = element_text(family = FIGURE_FONT, face = "plain", size = FONT_LABEL_SIZE),
+      legend.position   = c(0.8, 0.2),
+      axis.line         = element_line(colour = "black", size = AXIS_THICKNESS), 
+      legend.title      = element_blank(),
+      legend.text        = element_text(family = FIGURE_FONT, face = "plain", size = FONT_LABEL_SIZE),
+      legend.key.size    = unit(0.15, units = "in") 
+    ) 
+
+   
+print(line_plot)
+```
+
+## Saving the Plot
+
+Finally, we can save this plot in pdf format.
+Please pay attention to the dimensions of your figure.
+You may need to adjust the parameters after looking at the pdf at %100 scale or after printing your figure.
+
+
+
+```{r save_figure}
+save_plot_pdf = function(filename, this_plot, width = NA, height = NA){
+  ggsave(filename, 
+           plot   = this_plot, 
+           device = cairo_pdf, 
+           width  = width,
+           height = height,
+           dpi    = PDF_RESOLUTION )
+}
+
+save_plot_pdf("line_plot.pdf", line_plot, width = 2.35, height = 2.35)
+```
+
+## Tips
+
+  * SAVE YOUR PLOTS IN PDF FORMAT (there are a few exceptions).
+  * Have your plot in an object (in pur case it is `this_plot`).
+  * Have your parameters in one place (file or in the beginning of the script)
+  * Decide on the pdf dimensions and see the pdf file in %100 scale to decide on the parameters.
+
