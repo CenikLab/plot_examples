@@ -249,11 +249,3 @@ save_plot_pdf("line_plot.pdf", line_plot, width = 2.35, height = 2.35)
 print(line_plot)
 ```
 
-
-## Tips
-
-  * SAVE YOUR PLOTS IN PDF FORMAT (there are a few exceptions).
-  * Have your plot in an object (in our case it is `this_plot`).
-  * Have your parameters in one place (file or in the beginning of the script)
-  * Decide on the pdf dimensions and see the pdf file in %100 scale to decide on the parameters. The plot will likely look different in Rstudio than in PDF.
-
