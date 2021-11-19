@@ -5,13 +5,10 @@ output:
     keep_md: yes
 ---
   
-```{r, echo = FALSE}
-knitr::opts_chunk$set(
-  fig.path = "line_plots/plot-"
-)
-```
 
-```{r libraries,warning=FALSE, message=FALSE}
+
+
+```r
 library(ggplot2)
 library(ggpubr)
 library(reshape2)
@@ -23,8 +20,8 @@ library(ribor)
 
 Our data comes from a ribo file. We read the number reads mapping to CDS into a dataframe.
 
-```{r read_data,warning=FALSE, message=FALSE}
 
+```r
 ribo_file_path = "../sample.ribo"
 myribo         = Ribo(ribo_file_path, rename = rename_default)
 
@@ -43,7 +40,8 @@ rcw = dcast(rc, transcript ~ experiment)
 
 ## Constants
 
-```{r constants,warning=FALSE, message=FALSE}
+
+```r
 BURNT_ORANGE = "#bf5700"
 UT_BLUE      = "#005f86"
 
@@ -66,7 +64,8 @@ rna_blue    = rgb(55,135,192, maxColorValue = 255)
 id_1 and id_2 are the names of the experiments in the ribo file. You can rename them in the xlab and ylab parameters.
 num_bin is the number of bins the data is partitioned x and y directions.
 
-```{r function_definition,warning=FALSE, message=FALSE}
+
+```r
 plot_pairwise_relationships = function (counts_w, 
                                         id1, id2, 
                                         xlab    = "", 
@@ -110,10 +109,13 @@ plot_pairwise_relationships = function (counts_w,
 For your case, try different values of xrange, yrange and number of bins.
 
 
-```{r sample_plot,warning=FALSE, message=FALSE}
+
+```r
 plot_pairwise_relationships(rcw, 
                             "20191203-Kit-10M-Monosome-1", 
                             "20191203-Kit-10M-Monosome-2", 
                             xrange = 3000, yrange = 3000, num_bin = 80,
                             xlab = "Replicate 1", ylab = "Replicate 2")
 ```
+
+![](line_plots/plot-sample_plot-1.png)<!-- -->
