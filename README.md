@@ -9,6 +9,8 @@ Here, instead, we provide examples and tips for generating plots in R for manusc
 
   * Line plots
     * [Line plot with error bars](https://github.com/CenikLab/plot_examples/blob/main/line_and_point_plots/line_plots.md)
+  * Scatter plots
+    * [Scatter Plot with bins](https://github.com/CenikLab/plot_examples/blob/main/scatter/scatter_plain.md)  
 
 ## Prerequisites
 Basic knowledge of the following are assumed.
